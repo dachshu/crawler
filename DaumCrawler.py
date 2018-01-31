@@ -12,15 +12,22 @@ class DaumCrawler:
         self.browser = webdriver.Firefox()
         self.base_url = u'http://media.daum.net/ranking/bestreply/?regDate='
 
+    def crawl(self, date):
+        urls = self.get_targets(date)
+        for url in urls:
+            self.scroll_to_end(url)
+            ###########################
+
     def scroll_to_end(self, url):
         more_box_xpath = "//div[contains(@class, 'cmt_box')]//div[contains(@class, 'alex_more')]//a[contains(@class,'#more')]"
-        page = self.driver.get(url)
+        page = self.browser.get(url)
+        waiting_time = 10
         try:
-            more_box = self.driver.find_element_by_xpath(more_box_xpath)
+            more_box = self.browser.find_element_by_xpath(more_box_xpath)
             while True:
                 more_box.click()
                 try:
-                    more_box = WebDriverWait(self.driver, 2).until(
+                    more_box = WebDriverWait(self.browser, waiting_time).until(
                         EC.element_to_be_clickable((By.XPATH, more_box_xpath))
                     )
                 except TimeoutException:
@@ -32,7 +39,6 @@ class DaumCrawler:
         query = str(date)
         url = self.base_url + query
         self.browser.get(url)
-        time.sleep(1)
 
         li_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_news2')]//li")
 
@@ -44,6 +50,4 @@ class DaumCrawler:
 
 if __name__ == '__main__':
     dc = DaumCrawler()
-    dc.scroll_to_end('http://v.media.daum.net/v/20180131120719442')
-    cmt_list = dc.driver.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
-    print(len(cmt_list))
+    dc.crawl(20180131)
