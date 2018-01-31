@@ -21,7 +21,7 @@ class DaumCrawler:
     def scroll_to_end(self, url):
         more_box_xpath = "//div[contains(@class, 'cmt_box')]//div[contains(@class, 'alex_more')]//a[contains(@class,'#more')]"
         page = self.browser.get(url)
-        waiting_time = 10
+        waiting_time = 2
         try:
             more_box = self.browser.find_element_by_xpath(more_box_xpath)
             while True:
