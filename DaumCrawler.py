@@ -22,7 +22,3 @@ class DaumCrawler:
             tag_a = li.find_element_by_tag_name('a')
             urls.append(tag_a.get_attribute("href"))
         return urls
-
-
-DC = DaumCrawler()
-urls = DC.get_targets(20180130)
