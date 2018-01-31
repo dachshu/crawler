@@ -31,12 +31,12 @@ class DaumCrawler:
                         EC.element_to_be_clickable((By.XPATH, more_box_xpath))
                     )
                 except TimeoutException:
-                    print('no more comment')
+                    break
         finally:
             cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
             for cmt in cmt_list:
                 try:
-                    reply_btn = cmt.find_element_by_xpath(".//div[contains(@class, 'box_reply')]//span[contains(@class, 'num_txt')]")
+                    reply_btn = cmt.find_element_by_xpath(".//div[contains(@class, 'box_reply')]//button[contains(@class, '#reply')]//span[contains(@class, 'num_txt')]")
                     reply_btn.click()
 
                     more_reply_box_xpath = ".//div[contains(@class, 'reply_wrap')]//div[contains(@class, 'alex_more')]//a[contains(@class,'#more')]"
@@ -44,15 +44,14 @@ class DaumCrawler:
                         more_reply_box = cmt.find_element_by_xpath(more_reply_box_xpath)
                         while True:
                             more_reply_box.click()
-                            # 다시 불러오는 코드 수정해야함
                             try:
                                 more_reply_box = cmt.find_element_by_xpath(more_reply_box_xpath)
                             except NoSuchElementException:
                                 break
-                    finally:
+                    except NoSuchElementException:
                         pass
                 except NoSuchElementException:
-                    continue
+                    pass
 
     def get_targets(self, date):
         query = str(date)
