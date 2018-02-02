@@ -1,6 +1,7 @@
 import os
 import time
 import datetime
+import json
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -21,12 +22,19 @@ class DaumCrawler:
             self.browser.get(url)
 
             news = self.parse_news(url)
+            news['comment'] = {}
 
             self.scroll_to_end(url)
-            #댓글 파싱 
+            cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
+            for cmt in cmt_list:
+                data = self.parse_comment(cmt)
+                if data:
+                    news['comment'][data['id']] = data
 
             #write
-            
+            json_data = json.dumps(news, ensure_ascii=False)
+            f = open(news['id'], 'w', encoding='utf-8')
+            f.write(json_data)
 
 
     def parse_news(self, url):
@@ -83,6 +91,7 @@ class DaumCrawler:
     def get_targets(self, date):
         query = str(date)
         url = self.base_url + query
+        url = "http://media.daum.net/ranking/kkomkkom/"
         self.browser.get(url)
 
         li_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_news2')]//li")
@@ -93,7 +102,7 @@ class DaumCrawler:
             urls.append(tag_a.get_attribute("href"))
         return urls
 
-    def save_comment(self, comment, is_reply=False):
+    def parse_comment(self, comment, is_reply=False):
         data = {}
 
         if not is_reply:
@@ -115,7 +124,11 @@ class DaumCrawler:
             dt = datetime.datetime.strptime(cmt_time_txt, '%Y.%m.%d. %H:%M')
             cmt_time = time.mktime(dt.timetuple())
         data['time'] = cmt_time
-        data['text'] = comment.find_element_by_css_selector('p.desc_txt').text
+
+        try:
+            data['text'] = comment.find_element_by_css_selector('p.desc_txt').text
+        except NoSuchElementException:
+            return None
 
         if not is_reply:
             data['like'] = int(comment.find_element_by_css_selector('button.btn_recomm span.num_txt').text)
@@ -125,13 +138,11 @@ class DaumCrawler:
                 data['reply'] = {}
                 reply_list = comment.find_elements_by_css_selector('ul.list_reply li')
                 for reply in reply_list:
-                    r_data = self.save_comment(reply, is_reply=True)
+                    r_data = self.parse_comment(reply, is_reply=True)
                     data['reply'][r_data['id']] = r_data
 
         return data
 
 if __name__ == '__main__':
     dc = DaumCrawler()
-    dc.scroll_to_end('http://v.media.daum.net/v/20180131120719442')
-    cmt_list = dc.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
-    print(dc.save_comment(cmt_list[1]))
+    dc.crawl(20180201)
