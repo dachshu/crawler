@@ -41,7 +41,7 @@ class DaumCrawler:
             else : news_reporter = info
         news_press = self.browser.find_element_by_xpath("//div[contains(@class, 'head_view')]//img").get_attribute('alt')
         news_body = self.browser.find_element_by_xpath("//div[contains(@class, 'article_view')]").text
-        news = {'id' : news_id, 'title' : news_title, 'time' : news_open_time, 'modi_time' : news_modi_time, 'writer' : news_press, 'reporter' : news_reporter, 'text' : news_body }
+        news = {'id' : news_id, 'title' : news_title, 'time' : news_open_time, 'modi_time' : news_modi_time, 'press' : news_press, 'reporter' : news_reporter, 'text' : news_body }
         return news
 
     def scroll_to_end(self, url):
@@ -56,13 +56,6 @@ class DaumCrawler:
                         EC.element_to_be_clickable((By.XPATH, more_box_xpath))
                     )
                 except TimeoutException:
-<<<<<<< HEAD
-                    print('no more box')
-                    cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
-                    print(len(cmt_list))
-        finally:
-            return
-=======
                     break
         except:
             pass
@@ -83,7 +76,6 @@ class DaumCrawler:
                     break
         except NoSuchElementException:
             pass
->>>>>>> a6d0f08a8d4de1b5f46d9195bd3653497de2aed2
 
     def get_targets(self, date):
         query = str(date)
