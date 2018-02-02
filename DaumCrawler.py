@@ -14,9 +14,34 @@ class DaumCrawler:
 
     def crawl(self, date):
         urls = self.get_targets(date)
+        
         for url in urls:
+            self.browser.get(url)
+
+            news = self.parse_news(url)
+
             self.scroll_to_end(url)
-            ###########################
+            #댓글 파싱 
+
+            #write
+            
+
+
+    def parse_news(self, url):
+        news_id = url.split('/')[-1]
+        news_title = self.browser.find_element_by_xpath("//h3[contains(@class, 'tit_view')]").text
+        news_open_time = None
+        news_modi_time = None
+        news_reporter = None
+        for txt_info in self.browser.find_elements_by_xpath("//span[contains(@class, 'info_view')]//span[contains(@class, 'txt_info')]"):
+            info = txt_info.text
+            if info[0] == '입' and info[1] == '력': news_open_time = info[2:]
+            elif info[0] == '수' and info[1] == '정': news_modi_time = info[2:]
+            else : news_reporter = info
+        news_press = self.browser.find_element_by_xpath("//div[contains(@class, 'head_view')]//img").get_attribute('alt')
+        news_body = self.browser.find_element_by_xpath("//div[contains(@class, 'article_view')]").text
+        news = {'id' : news_id, 'title' : news_title, 'time' : news_open_time, 'modi_time' : news_modi_time, 'writer' : news_press, 'reporter' : news_reporter, 'text' : news_body }
+        return news
 
     def scroll_to_end(self, url):
         more_box_xpath = "//div[contains(@class, 'cmt_box')]//div[contains(@class, 'alex_more')]//a[contains(@class,'#more')]"
@@ -32,6 +57,8 @@ class DaumCrawler:
                     )
                 except TimeoutException:
                     print('no more box')
+                    cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
+                    print(len(cmt_list))
         finally:
             return
 
@@ -41,7 +68,7 @@ class DaumCrawler:
         self.browser.get(url)
 
         li_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_news2')]//li")
-
+        
         urls = []
         for li in li_list:
             tag_a = li.find_element_by_tag_name('a')
