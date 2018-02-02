@@ -1,5 +1,6 @@
 import os
 import time
+import datetime
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -57,15 +58,17 @@ class DaumCrawler:
                     )
                 except TimeoutException:
                     break
-        except:
+        except NoSuchElementException:
             pass
 
     def open_reply(self, comment):
-        # cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
         try:
             reply_btn = comment.find_element_by_xpath(".//div[contains(@class, 'box_reply')]//button[contains(@class, '#reply')]//span[contains(@class, 'num_txt')]")
             reply_btn.click()
+        except NoSuchElementException:
+            return False
 
+        try:
             more_reply_box_xpath = ".//div[contains(@class, 'reply_wrap')]//div[contains(@class, 'alex_more')]//a[contains(@class,'#more')]"
             more_reply_box = comment.find_element_by_xpath(more_reply_box_xpath)
             while True:
@@ -74,8 +77,8 @@ class DaumCrawler:
                     more_reply_box = self.wait.until(EC.element_to_be_clickable((By.XPATH, more_reply_box_xpath)))
                 except TimeoutException:
                     break
-        except NoSuchElementException:
-            pass
+        finally:
+            return True
 
     def get_targets(self, date):
         query = str(date)
@@ -90,8 +93,45 @@ class DaumCrawler:
             urls.append(tag_a.get_attribute("href"))
         return urls
 
+    def save_comment(self, comment, is_reply=False):
+        data = {}
+
+        if not is_reply:
+            data['id'] = int(comment.get_attribute('id').replace('comment',''))
+        else:
+            data['id'] = int(comment.get_attribute('data-reactid').split('.')[-1][1:])
+        data['name'] = comment.find_element_by_css_selector('a.link_nick').text
+
+        cmt_time_txt = comment.find_element_by_css_selector('span.txt_date').text
+        if '분' in cmt_time_txt:
+            now = datetime.datetime.now()
+            now = now - datetime.timedelta(minutes=int(cmt_time_txt.replace('분전', '')))
+            cmt_time = time.mktime(now.timetuple())
+        elif '시간' in cmt_time_txt:
+            now = datetime.datetime.now()
+            now = now - datetime.timedelta(hours=int(cmt_time_txt.replace('시간전','')))
+            cmt_time = time.mktime(now.timetuple())
+        else:
+            dt = datetime.datetime.strptime(cmt_time_txt, '%Y.%m.%d. %H:%M')
+            cmt_time = time.mktime(dt.timetuple())
+        data['time'] = cmt_time
+        data['text'] = comment.find_element_by_css_selector('p.desc_txt').text
+
+        if not is_reply:
+            data['like'] = int(comment.find_element_by_css_selector('button.btn_recomm span.num_txt').text)
+            data['diskile'] = int(comment.find_element_by_css_selector('button.btn_oppose span.num_txt').text)
+
+            if self.open_reply(comment):
+                data['reply'] = {}
+                reply_list = comment.find_elements_by_css_selector('ul.list_reply li')
+                for reply in reply_list:
+                    r_data = self.save_comment(reply, is_reply=True)
+                    data['reply'][r_data['id']] = r_data
+
+        return data
+
 if __name__ == '__main__':
     dc = DaumCrawler()
     dc.scroll_to_end('http://v.media.daum.net/v/20180131120719442')
     cmt_list = dc.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
-    dc.open_reply(cmt_list[1])
+    print(dc.save_comment(cmt_list[1]))
