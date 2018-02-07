@@ -120,6 +120,9 @@ class DaumCrawler:
             now = datetime.datetime.now()
             now = now - datetime.timedelta(hours=int(cmt_time_txt.replace('시간전','')))
             cmt_time = time.mktime(now.timetuple())
+        elif '조금' in cmt_time_txt:
+            now = datetime.datetime.now()
+            cmt_time = time.mktime(now.timetuple())
         else:
             dt = datetime.datetime.strptime(cmt_time_txt, '%Y.%m.%d. %H:%M')
             cmt_time = time.mktime(dt.timetuple())
