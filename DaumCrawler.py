@@ -113,6 +113,11 @@ class DaumCrawler:
     def parse_comment(self, comment, is_reply=False):
         data = {}
 
+        try:
+            data['text'] = comment.find_element_by_css_selector('p.desc_txt').text
+        except NoSuchElementException:
+            return None
+
         if not is_reply:
             data['id'] = int(comment.get_attribute('id').replace('comment',''))
         else:
@@ -135,11 +140,6 @@ class DaumCrawler:
             dt = datetime.datetime.strptime(cmt_time_txt, '%Y.%m.%d. %H:%M')
             cmt_time = time.mktime(dt.timetuple())
         data['time'] = cmt_time
-
-        try:
-            data['text'] = comment.find_element_by_css_selector('p.desc_txt').text
-        except NoSuchElementException:
-            return None
 
         if not is_reply:
             data['like'] = int(comment.find_element_by_css_selector('button.btn_recomm span.num_txt').text)
