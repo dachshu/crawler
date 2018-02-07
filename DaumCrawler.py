@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class DaumCrawler:
     def __init__(self):
-        #os.environ['MOZ_HEADLESS'] = '1'
+        os.environ['MOZ_HEADLESS'] = '1'
         self.browser = webdriver.Firefox()
         self.base_url = u'http://media.daum.net/ranking/bestreply/?regDate='
         self.wait = WebDriverWait(self.browser, 1.5)
@@ -20,16 +20,21 @@ class DaumCrawler:
         
         for url in urls:
             self.browser.get(url)
+            print('crawling', url)
 
             news = self.parse_news(url)
+            print('news article parsed')
             news['comment'] = {}
 
+            print('start crawling news comment')
             self.scroll_to_end(url)
             cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
-            for cmt in cmt_list:
+            cmt_num = len(cmt_list)
+            for i, cmt in enumerate(cmt_list):
                 data = self.parse_comment(cmt)
                 if data:
                     news['comment'][data['id']] = data
+                print('comment', '%d/%d' % (i+1, cmt_num), 'is done')
 
             #write
             json_data = json.dumps(news, ensure_ascii=False)
@@ -37,6 +42,7 @@ class DaumCrawler:
             os.makedirs(save_path, exist_ok=True)
             f = open(save_path + '/' + news['id'], 'w', encoding='utf-8')
             f.write(json_data)
+            print(url, 'is crawled')
 
 
     def parse_news(self, url):
@@ -93,7 +99,7 @@ class DaumCrawler:
     def get_targets(self, date):
         query = str(date)
         url = self.base_url + query
-        url = "http://media.daum.net/ranking/kkomkkom/"
+#url = "http://media.daum.net/ranking/kkomkkom/"
         self.browser.get(url)
 
         li_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_news2')]//li")
@@ -137,7 +143,7 @@ class DaumCrawler:
 
         if not is_reply:
             data['like'] = int(comment.find_element_by_css_selector('button.btn_recomm span.num_txt').text)
-            data['diskile'] = int(comment.find_element_by_css_selector('button.btn_oppose span.num_txt').text)
+            data['dislike'] = int(comment.find_element_by_css_selector('button.btn_oppose span.num_txt').text)
 
             if self.open_reply(comment):
                 data['reply'] = {}
@@ -151,4 +157,4 @@ class DaumCrawler:
 
 if __name__ == '__main__':
     dc = DaumCrawler()
-    dc.crawl(20180201)
+    dc.crawl(20180207)
