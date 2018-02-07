@@ -50,7 +50,7 @@ class DaumCrawler:
             else : news_reporter = info
         news_press = self.browser.find_element_by_xpath("//div[contains(@class, 'head_view')]//img").get_attribute('alt')
         news_body = self.browser.find_element_by_xpath("//div[contains(@class, 'article_view')]").text
-        news = {'id' : news_id, 'title' : news_title, 'time' : news_open_time, 'modi_time' : news_modi_time, 'press' : news_press, 'reporter' : news_reporter, 'text' : news_body }
+        news = {'type' : 'news', 'id' : news_id, 'title' : news_title, 'time' : news_open_time, 'modi_time' : news_modi_time, 'press' : news_press, 'reporter' : news_reporter, 'text' : news_body }
         return news
 
     def scroll_to_end(self, url):
