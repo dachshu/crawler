@@ -33,7 +33,9 @@ class DaumCrawler:
 
             #write
             json_data = json.dumps(news, ensure_ascii=False)
-            f = open(news['id'], 'w', encoding='utf-8')
+            save_path = 'crawled_data/daum_news'
+            os.makedirs(save_path, exist_ok=True)
+            f = open(save_path + '/' + news['id'], 'w', encoding='utf-8')
             f.write(json_data)
 
 
@@ -55,7 +57,7 @@ class DaumCrawler:
 
     def scroll_to_end(self, url):
         more_box_xpath = "//div[contains(@class, 'cmt_box')]//div[contains(@class, 'alex_more')]//a[contains(@class,'#more')]"
-        page = self.browser.get(url)
+        self.browser.get(url)
         try:
             more_box = self.browser.find_element_by_xpath(more_box_xpath)
             while True:
@@ -142,7 +144,8 @@ class DaumCrawler:
                 reply_list = comment.find_elements_by_css_selector('ul.list_reply li')
                 for reply in reply_list:
                     r_data = self.parse_comment(reply, is_reply=True)
-                    data['reply'][r_data['id']] = r_data
+                    if r_data:
+                        data['reply'][r_data['id']] = r_data
 
         return data
 
