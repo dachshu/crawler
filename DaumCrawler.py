@@ -34,11 +34,12 @@ class DaumCrawler:
                 data = self.parse_comment(cmt)
                 if data:
                     news['comment'][data['id']] = data
-                print('comment', '%d/%d' % (i+1, cmt_num), 'is done')
+                print('comment', '%d/%d' % (i+1, cmt_num), 'is done', end='\r')
+            print('')
 
             #write
             json_data = json.dumps(news, ensure_ascii=False)
-            save_path = 'crawled_data/daum_news'
+            save_path = 'crawled_data/daum_news/' + str(date)
             os.makedirs(save_path, exist_ok=True)
             f = open(save_path + '/' + news['id'], 'w', encoding='utf-8')
             f.write(json_data)
@@ -157,4 +158,4 @@ class DaumCrawler:
 
 if __name__ == '__main__':
     dc = DaumCrawler()
-    dc.crawl(20180207)
+    dc.crawl(20180208)
