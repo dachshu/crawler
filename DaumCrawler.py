@@ -76,7 +76,7 @@ class DaumCrawler:
                 except TimeoutException:
                     break
         except NoSuchElementException:
-            pass
+            return
 
     def open_reply(self, comment):
         try:
@@ -158,4 +158,4 @@ class DaumCrawler:
 
 if __name__ == '__main__':
     dc = DaumCrawler()
-    dc.crawl(20180208)
+    dc.crawl(20180209)
