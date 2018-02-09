@@ -26,8 +26,10 @@ class DaumCrawler:
             print('news article parsed')
             news['comment'] = {}
 
-            print('start crawling news comment')
+            print('start scroll to end of page')
             self.scroll_to_end(url)
+            print('scrolled to end of page')
+            print('start crawling news comment')
             cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
             cmt_num = len(cmt_list)
             for i, cmt in enumerate(cmt_list):
@@ -66,14 +68,19 @@ class DaumCrawler:
         more_box_xpath = "//div[contains(@class, 'cmt_box')]//div[contains(@class, 'alex_more')]//a[contains(@class,'#more')]"
         self.browser.get(url)
         try:
+            i = 0
             more_box = self.browser.find_element_by_xpath(more_box_xpath)
             while True:
+                i += 1
                 more_box.click()
+                print('\r' + i, 'click()', end='')
                 try:
                     more_box = self.wait.until(
                         EC.element_to_be_clickable((By.XPATH, more_box_xpath))
                     )
                 except TimeoutException:
+                    print('')
+                    print('no more comment')
                     break
         except NoSuchElementException:
             return
