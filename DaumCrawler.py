@@ -3,15 +3,16 @@ import time
 import datetime
 import json
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 class DaumCrawler:
     def __init__(self):
-        #os.environ['MOZ_HEADLESS'] = '1'
+        os.environ['MOZ_HEADLESS'] = '1'
         self.browser = webdriver.Firefox()
+        self.browser.implicitly_wait(0)
         self.base_url = u'http://media.daum.net/ranking/bestreply/?regDate='
         self.wait = WebDriverWait(self.browser, 1.5)
 
@@ -65,41 +66,43 @@ class DaumCrawler:
         return news
 
     def scroll_to_end(self, url):
-        more_box_xpath = "//div[contains(@class, 'cmt_box')]//div[contains(@class, 'alex_more')]//a[contains(@class,'#more')]"
         self.browser.get(url)
         try:
             i = 0
-            more_box = self.browser.find_element_by_xpath(more_box_xpath)
+            more_box = self.browser.find_element_by_css_selector("div.cmt_box div.alex_more a")
+            box_loc = more_box.location
             while True:
                 i += 1
                 more_box.click()
-                print('\r' + str(i), ' click()', end='')
-                try:
-                    more_box = self.wait.until(EC.visibility_of_element_located((By.XPATH, more_box_xpath)))
-                except TimeoutException:
-                    print('')
-                    print('no more comment')
-                    break
-        except NoSuchElementException:
+                print('\r' + str(i) + ' click()', end='')
+                while len(more_box.find_elements_by_tag_name('span')) < 2:
+                    time.sleep(0.2)
+                new_loc = more_box.location
+                if box_loc == new_loc:
+                    return
+                box_loc = new_loc
+        except (NoSuchElementException, StaleElementReferenceException):
             return
 
     def open_reply(self, comment):
         try:
-            reply_btn = comment.find_element_by_xpath(".//div[contains(@class, 'box_reply')]//button[contains(@class, '#reply')]//span[contains(@class, 'num_txt')]")
+            reply_btn = comment.find_element_by_css_selector("div.box_reply button.reply_count span.num_txt")
             reply_btn.click()
         except NoSuchElementException:
             return False
 
         try:
-            more_reply_box_xpath = ".//div[contains(@class, 'reply_wrap')]//div[contains(@class, 'alex_more')]//a[contains(@class,'#more')]"
-            more_reply_box = comment.find_element_by_xpath(more_reply_box_xpath)
+            more_reply_box = comment.find_element_by_css_selector("div.reply_wrap div.alex_more a")
+            box_loc = more_reply_box.location
             while True:
                 more_reply_box.click()
-                try:
-                    more_reply_box = self.wait.until(EC.element_to_be_clickable((By.XPATH, more_reply_box_xpath)))
-                except TimeoutException:
-                    break
-        finally:
+                while len(more_reply_box.find_elements_by_tag_name('span')) < 2:
+                    time.sleep(0.2)
+                new_loc = more_reply_box.location
+                if box_loc == new_loc:
+                    return
+                box_loc = new_loc
+        except (NoSuchElementException, StaleElementReferenceException):
             return True
 
     def get_targets(self, date):
