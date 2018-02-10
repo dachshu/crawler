@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class DaumCrawler:
     def __init__(self):
-        os.environ['MOZ_HEADLESS'] = '1'
+        #os.environ['MOZ_HEADLESS'] = '1'
         self.browser = webdriver.Firefox()
         self.base_url = u'http://media.daum.net/ranking/bestreply/?regDate='
         self.wait = WebDriverWait(self.browser, 1.5)
@@ -73,11 +73,9 @@ class DaumCrawler:
             while True:
                 i += 1
                 more_box.click()
-                print('\r' + i, 'click()', end='')
+                print('\r' + str(i), ' click()', end='')
                 try:
-                    more_box = self.wait.until(
-                        EC.element_to_be_clickable((By.XPATH, more_box_xpath))
-                    )
+                    more_box = self.wait.until(EC.visibility_of_element_located((By.XPATH, more_box_xpath)))
                 except TimeoutException:
                     print('')
                     print('no more comment')
