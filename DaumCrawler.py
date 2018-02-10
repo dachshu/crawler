@@ -29,7 +29,7 @@ class DaumCrawler:
 
             print('start scroll to end of page')
             self.scroll_to_end(url)
-            print('scrolled to end of page')
+            print('\nscrolled to end of page')
             print('start crawling news comment')
             cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
             cmt_num = len(cmt_list)
@@ -37,7 +37,7 @@ class DaumCrawler:
                 data = self.parse_comment(cmt)
                 if data:
                     news['comment'][data['id']] = data
-                print('comment', '%d/%d' % (i+1, cmt_num), 'is done', end='\r')
+                print('\rcomment %d/%d is done' % (i+1, cmt_num), end='')
             print('')
 
             #write
