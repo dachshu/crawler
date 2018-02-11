@@ -172,7 +172,7 @@ def get_date_to_crawl():
     parser = argparse.ArgumentParser()
     parser.add_argument('date', type=int, help='date to crawl. the format is YYYYMMDD. ex)20180211')
     args = parser.parse_args()
-    return args['date']
+    return args.date
 
 if __name__ == '__main__':
     dt = get_date_to_crawl()
