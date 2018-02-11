@@ -20,6 +20,8 @@ class DaumCrawler:
         urls = self.get_targets(date)
         
         for url in urls:
+            self.browser.quit()
+            self.browser = webdriver.Firefox()
             self.browser.get(url)
             print('crawling', url)
 
@@ -28,7 +30,7 @@ class DaumCrawler:
             news['comment'] = {}
 
             print('start scroll to end of page')
-            self.scroll_to_end(url)
+            self.scroll_to_end()
             print('\nscrolled to end of page')
             print('start crawling news comment')
             cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
@@ -65,8 +67,7 @@ class DaumCrawler:
         news = {'type' : 'news', 'id' : news_id, 'title' : news_title, 'time' : news_open_time, 'modi_time' : news_modi_time, 'press' : news_press, 'reporter' : news_reporter, 'text' : news_body }
         return news
 
-    def scroll_to_end(self, url):
-        self.browser.get(url)
+    def scroll_to_end(self):
         try:
             i = 0
             more_box = self.browser.find_element_by_css_selector("div.cmt_box div.alex_more a")
@@ -168,4 +169,4 @@ class DaumCrawler:
 
 if __name__ == '__main__':
     dc = DaumCrawler()
-    dc.crawl(20180209)
+    dc.crawl(20180211)
