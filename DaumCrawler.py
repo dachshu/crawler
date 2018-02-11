@@ -175,5 +175,6 @@ def get_date_to_crawl():
     return args['date']
 
 if __name__ == '__main__':
+    dt = get_date_to_crawl()
     dc = DaumCrawler()
-    dc.crawl(get_date_to_crawl())
+    dc.crawl(dt)
