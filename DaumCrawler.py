@@ -2,6 +2,7 @@ import os
 import time
 import datetime
 import json
+import argparse
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
@@ -167,6 +168,12 @@ class DaumCrawler:
 
         return data
 
+def get_date_to_crawl():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('date', type=int, help='date to crawl. the format is YYYYMMDD. ex)20180211')
+    args = parser.parse_args()
+    return args['date']
+
 if __name__ == '__main__':
     dc = DaumCrawler()
-    dc.crawl(20180211)
+    dc.crawl(get_date_to_crawl())
