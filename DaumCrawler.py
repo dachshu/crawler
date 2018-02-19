@@ -11,19 +11,32 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class DaumCrawler:
     def __init__(self):
-        os.environ['MOZ_HEADLESS'] = '1'
+        #os.environ['MOZ_HEADLESS'] = '1'
         self.browser = webdriver.Firefox()
         self.browser.implicitly_wait(0)
         self.base_url = u'http://media.daum.net/ranking/bestreply/?regDate='
         self.wait = WebDriverWait(self.browser, 1.5)
 
-    def crawl(self, date):
-        urls = self.get_targets(date)
+    def crawl(self, date=None, url=None):
+        if date:
+            urls = self.get_targets(date)
+        elif url:
+            urls = [url]
+        else:
+            urls = []
         
         for url in urls:
             self.browser.quit()
             self.browser = webdriver.Firefox()
             self.browser.get(url)
+
+            # remove vod bar
+            self.browser.execute_script("""
+            var e = document.querySelector(".vod_open");
+            if (e)
+                e.parentNode.removeChild(e);
+            """)
+
             print('crawling', url)
 
             news = self.parse_news(url)
@@ -170,11 +183,18 @@ class DaumCrawler:
 
 def get_date_to_crawl():
     parser = argparse.ArgumentParser()
-    parser.add_argument('date', type=int, help='date to crawl. the format is YYYYMMDD. ex)20180211')
+    parser.add_argument('date', help='date to crawl. the format is YYYYMMDD. ex)20180211')
+    parser.add_argument('-u', '--url', action='store_true', help='make \'date\' parameter to get a url')
     args = parser.parse_args()
-    return args.date
+    if args.url:
+        return ('url', args.date)
+    else:
+        return ('date', int(args.date))
 
 if __name__ == '__main__':
     dt = get_date_to_crawl()
     dc = DaumCrawler()
-    dc.crawl(dt)
+    if dt[0] == 'url':
+        dc.crawl(url=dt[1])
+    elif dt[0] == 'date':
+        dc.crawl(date=dt[1])
