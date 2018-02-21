@@ -117,7 +117,7 @@ class DaumCrawler:
                     more_reply_box = comment.find_element_by_css_selector("div.reply_wrap>div.alex_more a")
                 new_loc = more_reply_box.location
                 if box_loc == new_loc:
-                    return
+                    return True
                 box_loc = new_loc
         except (NoSuchElementException, StaleElementReferenceException):
             return True
