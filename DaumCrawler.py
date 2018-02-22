@@ -90,7 +90,10 @@ class DaumCrawler:
                 i += 1
                 more_box.click()
                 print('\r' + str(i) + ' click()', end='')
+                start_time = time.time()
                 while len(more_box.find_elements_by_tag_name('span')) < 2:
+                    if time.time()-start_time >= 10:
+                        return True
                     time.sleep(0.2)
                     more_box = self.browser.find_element_by_css_selector("div.cmt_box>div.alex_more a")
                 new_loc = more_box.location
@@ -112,7 +115,10 @@ class DaumCrawler:
             box_loc = more_reply_box.location
             while True:
                 more_reply_box.click()
+                start_time = time.time()
                 while len(more_reply_box.find_elements_by_tag_name('span')) < 2:
+                    if time.time()-start_time >= 10:
+                        return True
                     time.sleep(0.2)
                     more_reply_box = comment.find_element_by_css_selector("div.reply_wrap>div.alex_more a")
                 new_loc = more_reply_box.location
