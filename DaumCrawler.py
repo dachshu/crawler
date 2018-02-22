@@ -93,7 +93,7 @@ class DaumCrawler:
                 start_time = time.time()
                 while len(more_box.find_elements_by_tag_name('span')) < 2:
                     if time.time()-start_time >= 10:
-                        return True
+                        return
                     time.sleep(0.2)
                     more_box = self.browser.find_element_by_css_selector("div.cmt_box>div.alex_more a")
                 new_loc = more_box.location
