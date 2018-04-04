@@ -20,6 +20,7 @@ class DaumCrawler:
     def crawl(self, date=None, url=None):
         if date:
             urls = self.get_targets(date)
+            print("start crawling", date)
         elif url:
             urls = [url]
         else:
@@ -189,13 +190,13 @@ class DaumCrawler:
 
 def get_date_to_crawl():
     parser = argparse.ArgumentParser()
-    parser.add_argument('date', help='date to crawl. the format is YYYYMMDD. ex)20180211')
+    parser.add_argument('date', nargs='+', help='date to crawl. the format is YYYYMMDD. ex)20180211')
     parser.add_argument('-u', '--url', action='store_true', help='make \'date\' parameter to get a url')
     args = parser.parse_args()
     if args.url:
         return ('url', args.date)
     else:
-        return ('date', int(args.date))
+        return ('date', [int(d) for d in args.date])
 
 if __name__ == '__main__':
     dt = get_date_to_crawl()
@@ -203,4 +204,5 @@ if __name__ == '__main__':
     if dt[0] == 'url':
         dc.crawl(url=dt[1])
     elif dt[0] == 'date':
-        dc.crawl(date=dt[1])
+        for d in dt[1]:
+            dc.crawl(date=d)
