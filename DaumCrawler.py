@@ -27,9 +27,9 @@ class DaumCrawler:
         else:
             urls = []
         
+        self.browser.quit()
         for url in urls:
             try:
-                self.browser.quit()
                 self.browser = webdriver.Firefox()
                 self.browser.get(url)
 
@@ -70,6 +70,8 @@ class DaumCrawler:
                 with open("error.log", 'a') as err_file:
                     log_text = str(date) + ", " + str(url) + ", " + str(e) + "\n"
                     err_file.write(log_text)
+            finally:
+                self.browser.quit()
 
 
     def parse_news(self, url):
