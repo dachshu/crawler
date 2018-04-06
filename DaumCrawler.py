@@ -3,6 +3,7 @@ import time
 import datetime
 import json
 import argparse
+import sys
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
@@ -27,43 +28,48 @@ class DaumCrawler:
             urls = []
         
         for url in urls:
-            self.browser.quit()
-            self.browser = webdriver.Firefox()
-            self.browser.get(url)
+            try:
+                self.browser.quit()
+                self.browser = webdriver.Firefox()
+                self.browser.get(url)
 
-            # remove vod bar
-            self.browser.execute_script("""
-            var e = document.querySelector(".vod_open");
-            if (e)
-                e.parentNode.removeChild(e);
-            """)
+                # remove vod bar
+                self.browser.execute_script("""
+                var e = document.querySelector(".vod_open");
+                if (e)
+                    e.parentNode.removeChild(e);
+                """)
 
-            print('crawling', url)
+                print('crawling', url)
 
-            news = self.parse_news(url)
-            print('news article parsed')
-            news['comment'] = {}
+                news = self.parse_news(url)
+                print('news article parsed')
+                news['comment'] = {}
 
-            print('start scroll to end of page')
-            self.scroll_to_end()
-            print('\nscrolled to end of page')
-            print('start crawling news comment')
-            cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
-            cmt_num = len(cmt_list)
-            for i, cmt in enumerate(cmt_list):
-                data = self.parse_comment(cmt)
-                if data:
-                    news['comment'][data['id']] = data
-                print('\rcomment %d/%d is done' % (i+1, cmt_num), end='')
-            print('')
+                print('start scroll to end of page')
+                self.scroll_to_end()
+                print('\nscrolled to end of page')
+                print('start crawling news comment')
+                cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
+                cmt_num = len(cmt_list)
+                for i, cmt in enumerate(cmt_list):
+                    data = self.parse_comment(cmt)
+                    if data:
+                        news['comment'][data['id']] = data
+                    print('\rcomment %d/%d is done' % (i+1, cmt_num), end='')
+                print('')
 
-            #write
-            json_data = json.dumps(news, ensure_ascii=False)
-            save_path = 'crawled_data/daum_news/' + str(date)
-            os.makedirs(save_path, exist_ok=True)
-            f = open(save_path + '/' + news['id'], 'w', encoding='utf-8')
-            f.write(json_data)
-            print(url, 'is crawled')
+                #write
+                json_data = json.dumps(news, ensure_ascii=False)
+                save_path = 'crawled_data/daum_news/' + str(date)
+                os.makedirs(save_path, exist_ok=True)
+                f = open(save_path + '/' + news['id'], 'w', encoding='utf-8')
+                f.write(json_data)
+                print(url, 'is crawled')
+            except Exception as e:
+                with open("error.log", 'a') as err_file:
+                    log_text = str(date) + ", " + str(url) + ", " + str(e) + "\n"
+                    err_file.write(log_text)
 
 
     def parse_news(self, url):
@@ -190,13 +196,23 @@ class DaumCrawler:
 
 def get_date_to_crawl():
     parser = argparse.ArgumentParser()
-    parser.add_argument('date', nargs='+', help='date to crawl. the format is YYYYMMDD. ex)20180211')
-    parser.add_argument('-u', '--url', action='store_true', help='make \'date\' parameter to get a url')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('--date', nargs='+', help='date to crawl. the format is YYYYMMDD. ex)20180211')
+    group.add_argument('-u', '--url', help='make \'date\' parameter to get a url')
+    group.add_argument('--duration', nargs=2, help='crawling news between two dates')
     args = parser.parse_args()
     if args.url:
-        return ('url', args.date)
+        return ('url', args.url)
+    elif args.duration:
+        d_first = datetime.datetime.strptime(args.duration[0], "%Y%m%d").date()
+        d_last = datetime.datetime.strptime(args.duration[1], "%Y%m%d").date()
+        dates = []
+        while d_first <= d_last:
+            dates.append(d_first.strftime("%Y%m%d"))
+            d_first += datetime.timedelta(days=1)
+            return ('date', dates)
     else:
-        return ('date', [int(d) for d in args.date])
+        return ('date', [d for d in args.date])
 
 if __name__ == '__main__':
     dt = get_date_to_crawl()
