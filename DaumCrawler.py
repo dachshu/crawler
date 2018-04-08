@@ -222,5 +222,9 @@ if __name__ == '__main__':
     if dt[0] == 'url':
         dc.crawl(url=dt[1])
     elif dt[0] == 'date':
+        print("articles on following dates is going to be crawled: ")
+        for d in dt[1]:
+            print(d, end=', ')
+        print("")
         for d in dt[1]:
             dc.crawl(date=d)
