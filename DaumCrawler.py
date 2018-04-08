@@ -212,7 +212,7 @@ def get_date_to_crawl():
         while d_first <= d_last:
             dates.append(d_first.strftime("%Y%m%d"))
             d_first += datetime.timedelta(days=1)
-            return ('date', dates)
+        return ('date', dates)
     else:
         return ('date', [d for d in args.date])
 
