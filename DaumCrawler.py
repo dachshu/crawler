@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import os
 import time
 import datetime
@@ -19,59 +20,67 @@ class DaumCrawler:
         self.wait = WebDriverWait(self.browser, 1.5)
 
     def crawl(self, date=None, url=None):
-        if date:
-            urls = self.get_targets(date)
-            print("start crawling", date)
-        elif url:
-            urls = [url]
-        else:
-            urls = []
+        try:
+            if date:
+                urls = self.get_targets(date)
+                print("start crawling", date)
+            elif url:
+                urls = [url]
+            else:
+                urls = []
         
-        self.browser.quit()
-        for url in urls:
-            try:
-                self.browser = webdriver.Firefox()
-                self.browser.get(url)
+            self.browser.quit()
+            for url in urls:
+                try:
+                    self.browser = webdriver.Firefox()
+                    self.browser.get(url)
 
-                # remove vod bar
-                self.browser.execute_script("""
-                var e = document.querySelector(".vod_open");
-                if (e)
-                    e.parentNode.removeChild(e);
-                """)
+                    # remove vod bar
+                    self.browser.execute_script("""
+                    var e = document.querySelector(".vod_open");
+                    if (e)
+                        e.parentNode.removeChild(e);
+                    """)
 
-                print('crawling', url)
+                    print('crawling', url)
 
-                news = self.parse_news(url)
-                print('news article parsed')
-                news['comment'] = {}
+                    news = self.parse_news(url)
+                    print('news article parsed')
+                    news['comment'] = {}
 
-                print('start scroll to end of page')
-                self.scroll_to_end()
-                print('\nscrolled to end of page')
-                print('start crawling news comment')
-                cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
-                cmt_num = len(cmt_list)
-                for i, cmt in enumerate(cmt_list):
-                    data = self.parse_comment(cmt)
-                    if data:
-                        news['comment'][data['id']] = data
-                    print('\rcomment %d/%d is done' % (i+1, cmt_num), end='')
-                print('')
+                    print('start scroll to end of page')
+                    self.scroll_to_end()
+                    print('\nscrolled to end of page')
+                    print('start crawling news comment')
+                    cmt_list = self.browser.find_elements_by_xpath("//ul[contains(@class, 'list_comment')]//li")
+                    cmt_num = len(cmt_list)
+                    for i, cmt in enumerate(cmt_list):
+                        data = self.parse_comment(cmt)
+                        if data:
+                            news['comment'][data['id']] = data
+                        print('\rcomment %d/%d is done' % (i+1, cmt_num), end='')
+                    print('')
 
-                #write
-                json_data = json.dumps(news, ensure_ascii=False)
-                save_path = 'crawled_data/daum_news/' + str(date)
-                os.makedirs(save_path, exist_ok=True)
-                f = open(save_path + '/' + news['id'], 'w', encoding='utf-8')
-                f.write(json_data)
-                print(url, 'is crawled')
-            except Exception as e:
-                with open("error.log", 'a') as err_file:
-                    log_text = str(date) + ", " + str(url) + ", " + str(e) + "\n"
-                    err_file.write(log_text)
-            finally:
-                self.browser.quit()
+                    #write
+                    json_data = json.dumps(news, ensure_ascii=False)
+                    save_path = 'crawled_data/daum_news/' + str(date)
+                    os.makedirs(save_path, exist_ok=True)
+                    f = open(save_path + '/' + news['id'], 'w', encoding='utf-8')
+                    f.write(json_data)
+                    print(url, 'is crawled')
+                except Exception as e:
+                    with open("error.log", 'a') as err_file:
+                        log_text = str(date) + ", " + str(url) + ", " + str(e) + "\n"
+                        err_file.write(log_text)
+                finally:
+                    self.browser.quit()
+
+        except Exception as e:
+            with open("error.log", 'a') as err_file:
+                log_text = str(date) + ", " + str(url) + ", " + str(e) + "\n"
+                err_file.write(log_text)
+            self.browser.quit()
+            self.browser = webdriver.Firefox()
 
 
     def parse_news(self, url):
@@ -178,7 +187,8 @@ class DaumCrawler:
             now = datetime.datetime.now()
             cmt_time = time.mktime(now.timetuple())
         else:
-            dt = datetime.datetime.strptime(cmt_time_txt, '%Y.%m.%d. %H:%M')
+            cmt_time_txt.replace(' ','')
+            dt = datetime.datetime.strptime(cmt_time_txt, '%Y.%m.%d.%H:%M')
             cmt_time = time.mktime(dt.timetuple())
         data['time'] = cmt_time
 
