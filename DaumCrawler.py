@@ -16,10 +16,10 @@ from selenium.webdriver.support import expected_conditions as EC
 SCRIPT_PATH = os.path.dirname(os.path.realpath(sys.argv[0]))
 
 def get_new_browser():
-    options = webdriver.ChromeOptions()
-    options.add_argument('headless')
-    return webdriver.Firefox()
+    # options = webdriver.ChromeOptions()
+    # options.add_argument('headless')
     # return webdriver.Chrome(chrome_options=options, executable_path='/usr/local/bin/chromedriver') 
+    return webdriver.Firefox()
 
 class DaumCrawler:
     def __init__(self):
@@ -41,6 +41,7 @@ class DaumCrawler:
             self.browser.quit()
             self.browser = get_new_browser()
             return []
+
 
     @staticmethod
     def crawl_url(browser, url):
